@@ -61,11 +61,21 @@ public class GladiatorAI : MonoBehaviour
             Data.Agility * Time.deltaTime
         );
     }
-
     void Attack()
     {
+        // Saldýrý hýzý/þansý kontrolü
         if (Random.value < 0.05f)
-            CombatResolver.Resolve(Data, Target.GetComponent<GladiatorAI>().Data);
+        {
+            // Hedefin üzerindeki AI scriptini al
+            var targetAI = Target.GetComponent<GladiatorAI>();
+
+            if (targetAI != null)
+            {
+                // Deðiþtirdiðimiz yeni Resolve fonksiyonunu çaðýr
+                // (Kendi verimiz, Rakibin AI Scripti)
+                CombatResolver.Resolve(Data, targetAI);
+            }
+        }
     }
 
     void LateUpdate()
