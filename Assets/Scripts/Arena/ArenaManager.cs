@@ -113,9 +113,22 @@ public class ArenaManager : MonoBehaviour
             ResultPanel.transform.SetAsLastSibling();
         }
 
+
+
         if (playerWon)
         {
             ResultText.text = "VICTORY!";
+
+            if (playerAI != null && playerAI.Data != null)
+            {
+                playerAI.Data.Wins++; 
+                
+                // EXTRA GÜVENLÝK: 
+                // Eðer maçý kazandýysan ama son anda canýn 0'a indiyse (Kanama vs.),
+                // Caný 1 yapalým ki Ludus'a dönünce ölü sayýlýp silinmesin.
+                if (playerAI.Data.HP <= 0) playerAI.Data.HP = 1;
+            }
+
             // Campaign Kontrolü
             if (GameManager.I != null && GameManager.I.CurrentMissionIndex != -1)
             {
