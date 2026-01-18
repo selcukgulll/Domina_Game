@@ -82,17 +82,14 @@ public class GladiatorView : MonoBehaviour
     // Kýzarma animasyonu (0.1 saniye kýrmýzý kalýr, sonra düzelir)
     IEnumerator RedFlashRoutine()
     {
-        // YENÝSÝ: Yumuþak Kýrmýzý (Tint)
-        // Mantýk þu: RGB (Kýrmýzý, Yeþil, Mavi).
-        // Tam kýrmýzý (1, 0, 0)'dýr.
-        // Biz (1, 0.5, 0.5) yaparak kýrmýzýnýn þiddetini azaltýp, orijinal renklerin
-        // alttan %50 oranýnda görünmesini saðlýyoruz.
-        // Sondaki '1f' ise opaklýk (Alpha). Karakter hayalet gibi olmasýn diye tam görünür (1) býrakýyoruz.
+        // 1. DAMAGE RENGÝ (Hafif Kýrmýzý Tint)
+        BodyRenderer.color = new Color(1f, 0.6f, 0.6f, 1f);
 
-        BodyRenderer.color = new Color(1f, 0.4f, 0.4f, 1f); // Rengi buradan açýp koyulaþtýrabilirsin
+        yield return new WaitForSeconds(0.15f); // Biraz daha belirgin olsun diye 0.15s
 
-        yield return new WaitForSeconds(0.1f); // 0.1 saniye bekle
-
-        BodyRenderer.color = Color.white;     // Normale dön
+        // 2. RESET (Boya Silme)
+        // Bu komut "Beyaza boya" demek deðildir. "Üzerindeki renk filtresini kaldýr" demektir.
+        // Prefabýn orjinali sarýysa sarý, maviyse mavi görünür.
+        BodyRenderer.color = Color.white;
     }
 }

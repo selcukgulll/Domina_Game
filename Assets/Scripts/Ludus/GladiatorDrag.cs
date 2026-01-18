@@ -45,6 +45,10 @@ public class GladiatorDrag : MonoBehaviour
 
     void OnMouseDown()
     {
+
+        // Eğer sahnede LudusManager yoksa (Yani Arena'daysak), bu script çalışmasın.
+        if (manager == null) return;
+       
         // 1. UI KORUMASI: Mouse gerçek bir UI (Buton, Panel vb.) üzerinde mi?
         // (Physics 2D Raycaster silindiği için artık gladyatörde tetiklenmez, sadece UI'da çalışır)
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())

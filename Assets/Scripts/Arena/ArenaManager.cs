@@ -26,6 +26,7 @@ public class ArenaManager : MonoBehaviour
 
         playerAI = SpawnFighter(pData, SpawnPoint1, false).GetComponent<GladiatorAI>();
         enemyAI = SpawnFighter(eData, SpawnPoint2, true).GetComponent<GladiatorAI>();
+        Time.timeScale = 1f;
     }
 
     GameObject SpawnFighter(GladiatorData data, Transform spawnPoint, bool isEnemy)
@@ -45,46 +46,75 @@ public class ArenaManager : MonoBehaviour
 
     void Update()
     {
-        // Hedef atamalarý (Start'ta bulamazlarsa diye güvenli yöntem)
-        if (playerAI.Target == null) playerAI.Target = enemyAI.transform;
-        if (enemyAI.Target == null) enemyAI.Target = playerAI.transform;
-
+        // Savaþ bittiyse daha fazla iþlem yapma
         if (battleEnded) return;
 
-        // Biri öldü mü kontrolü
-        if (playerAI.Data.HP <= 0)
+        // GÜVENLÝK ÖNLEMÝ: Eðer adamlar yoksa (Destroy edildiyse) hata vermesin
+        if (playerAI == null || enemyAI == null) return;
+
+        // Hedef atamalarý (Target kaybolursa tekrar bulsun)
+        if (playerAI.Target == null && enemyAI != null) playerAI.Target = enemyAI.transform;
+        if (enemyAI.Target == null && playerAI != null) enemyAI.Target = playerAI.transform;
+
+        // --- DAHA HIZLI TESPÝT ---
+        // Canýn 0 veya daha az olduðunu gördüðümüz an savaþý bitir
+
+        bool playerDead = playerAI.Data.HP <= 0;
+        bool enemyDead = enemyAI.Data.HP <= 0;
+
+        if (playerDead)
         {
+            Debug.Log("Player Died detected in Update"); // Konsoldan takip et
             EndBattle(false); // Kaybettin
         }
-        else if (enemyAI.Data.HP <= 0)
+        else if (enemyDead)
         {
+            Debug.Log("Enemy Died detected in Update"); // Konsoldan takip et
             EndBattle(true); // Kazandýn
         }
     }
 
     void EndBattle(bool playerWon)
     {
+        // Çift çalýþmayý önle
+        if (battleEnded) return;
         battleEnded = true;
-        ResultPanel.SetActive(true);
+
+        Debug.Log("SAVAÞ BÝTTÝ! Sonuç Paneli Açýlýyor...");
+
+        // 1. ZAMAN GARANTÝSÝ (Oyun yavaþladýysa normale döndür)
+        Time.timeScale = 1f;
+
+        if (ResultPanel != null)
+        {
+            // Paneli Aktif Et
+            ResultPanel.SetActive(true);
+
+            // --- KRÝTÝK ÇÖZÜM: EN ÖNE GETÝR ---
+            // Bu komut, paneli Canvas hiyerarþisinin en altýna taþýr.
+            // Unity'de en alttaki obje, ekranda EN ÖNDE çizilir.
+            ResultPanel.transform.SetAsLastSibling();
+        }
+        else
+        {
+            Debug.LogError("HATA: ResultPanel Inspector'da atanmamýþ!");
+        }
 
         if (playerWon)
         {
             ResultText.text = "VICTORY!";
-            // ÖDÜL KAZANMA
             if (GameManager.I != null) GameManager.I.Resources.Gold += 250;
         }
         else
         {
             ResultText.text = "DEFEAT...";
-            // ÖLÜMÜ KAYDETME (Kalýcý Silme)
+            // Ölüm Ýþlemleri
             if (GameManager.I != null)
             {
                 var deadGlad = GameManager.I.PlayerFighter;
                 if (deadGlad != null)
                 {
-                    deadGlad.HP = -999; // Ölü olduðunu garantile
-                    // Listeden hemen silmiyoruz, Ludus'a dönünce temizleyeceðiz
-                    // Veya direkt silebiliriz:
+                    deadGlad.HP = -999;
                     GameManager.I.Gladiators.Remove(deadGlad);
                 }
             }
