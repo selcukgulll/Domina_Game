@@ -40,6 +40,8 @@ public class GladiatorData
         HP = MaxHP;
         Stamina = 100;
         XP = 0;
+
+        Wins = 0;
     }
 
     public void GainXP(int amount)

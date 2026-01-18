@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections; // <-- Coroutine (Yanýp sönme) için bunu ekledik
 
 public class GladiatorView : MonoBehaviour
 {
@@ -14,15 +13,22 @@ public class GladiatorView : MonoBehaviour
     public Image HPBarFill;
     public GameObject BadgeObj;
 
-    [Header("Visuals (Yeni)")]
-    public SpriteRenderer BodyRenderer; // <-- YENÝ: Gladyatörün resmi (Kýzarmasý için)
+    [Header("Visuals")]
+    public SpriteRenderer BodyRenderer;
 
-    // --- ROTASYON KÝLÝDÝ ---
     public Vector3 UIOffset = new Vector3(0, 0.8f, 0);
 
-    public void Bind(GladiatorData data)
+    // Arena ve Düþman kontrolü
+    private bool isArenaMode = false;
+    private bool isEnemy = false;
+
+    // --- ÖNEMLÝ: Fonksiyonu 3 parametreli yaptýk ---
+    public void Bind(GladiatorData data, bool arenaContext = false, bool enemyFlag = false)
     {
         currentData = data;
+        isArenaMode = arenaContext;
+        isEnemy = enemyFlag;
+
         RefreshVisuals();
     }
 
@@ -30,9 +36,21 @@ public class GladiatorView : MonoBehaviour
     {
         if (CanvasObj != null)
         {
-            // Canvas hep dik dursun ve kafanýn üstünde kalsýn
+            // 1. DÝK DURUÞ VE POZÝSYON (Standart)
             CanvasObj.rotation = Quaternion.identity;
             CanvasObj.position = transform.position + UIOffset;
+
+            // 2. AYNA DÜZELTME (Yeni Deðiþkensiz Yöntem)
+            // Mantýk: Canvas'ýn mevcut boyutu neyse (0.005 falan olabilir) onu al,
+            // ama iþaretini (+ veya -) babasýnýn yönüne göre ayarla.
+
+            float currentSizeX = Mathf.Abs(CanvasObj.localScale.x); // Boyutu pozitif olarak al
+
+            // Eðer karakter sola bakýyorsa (-), Canvas da (-) olsun ki çarpýmlarý (+) çýksýn.
+            float direction = (transform.localScale.x < 0) ? -1f : 1f;
+
+            // Sadece X eksenini etkile, Y ve Z olduðu gibi kalsýn
+            CanvasObj.localScale = new Vector3(currentSizeX * direction, CanvasObj.localScale.y, CanvasObj.localScale.z);
         }
     }
 
@@ -40,56 +58,49 @@ public class GladiatorView : MonoBehaviour
     {
         if (currentData == null) return;
 
+        // 1. ÝSÝM ve RENK AYARI
         if (NameText != null)
+        {
             NameText.text = currentData.Name;
 
-        if (HPBarFill != null)
+            if (isArenaMode)
+            {
+                // Arenadaysak: Düþman Kýrmýzý, Bizimki Beyaz
+                if (isEnemy) NameText.color = Color.red;
+                else NameText.color = Color.white;
+            }
+            // Ludus'taysak: Prefab rengi (Sarý vs.) kalýr
+        }
+
+        // 2. CAN BARI
+        if (HPBarFill != null && currentData.MaxHP > 0)
         {
             float hpPercent = currentData.HP / currentData.MaxHP;
             HPBarFill.fillAmount = hpPercent;
             HPBarFill.color = Color.Lerp(Color.red, Color.green, hpPercent);
         }
 
-        if (WinText != null && BadgeObj != null)
+        // 3. BADGE ve WIN SAYISI
+        if (BadgeObj != null)
         {
-            BadgeObj.SetActive(true);
-            WinText.text = currentData.Wins.ToString();
+            BadgeObj.SetActive(true); // Rozet hep görünsün
+            if (WinText != null)
+            {
+                // Verideki Win sayýsýný yaz
+                WinText.text = currentData.Wins.ToString();
+            }
         }
     }
 
-    // --- YENÝ EKLENEN FONKSÝYONLAR ---
-    // Bu fonksiyonu Savaþ Kodun (BattleSystem veya ArenaManager) çaðýracak
+    // Hasar efekti için (Daha önce konuþtuðumuz animasyon kodu)
     public void PlayDamageEffect(float currentHP, float maxHP)
     {
-        // 1. CAN BARINI GÜNCELLE (Anlýk)
         if (HPBarFill != null && maxHP > 0)
         {
             float hpPercent = currentHP / maxHP;
             HPBarFill.fillAmount = hpPercent;
-            // Can azaldýkça rengi de deðiþsin (Yeþilden Kýrmýzýya)
             HPBarFill.color = Color.Lerp(Color.red, Color.green, hpPercent);
         }
-
-        // 2. KIZARMA EFEKTÝNÝ BAÞLAT
-        if (BodyRenderer != null)
-        {
-            // Eðer arka arkaya vurulursa eski efekti durdur, yenisini baþlat
-            StopAllCoroutines();
-            StartCoroutine(RedFlashRoutine());
-        }
-    }
-
-    // Kýzarma animasyonu (0.1 saniye kýrmýzý kalýr, sonra düzelir)
-    IEnumerator RedFlashRoutine()
-    {
-        // 1. DAMAGE RENGÝ (Hafif Kýrmýzý Tint)
-        BodyRenderer.color = new Color(1f, 0.6f, 0.6f, 1f);
-
-        yield return new WaitForSeconds(0.15f); // Biraz daha belirgin olsun diye 0.15s
-
-        // 2. RESET (Boya Silme)
-        // Bu komut "Beyaza boya" demek deðildir. "Üzerindeki renk filtresini kaldýr" demektir.
-        // Prefabýn orjinali sarýysa sarý, maviyse mavi görünür.
-        BodyRenderer.color = Color.white;
+        // Ýlerde buraya "Hit" animasyonu eklenebilir
     }
 }

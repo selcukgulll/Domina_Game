@@ -29,6 +29,8 @@ public class LudusShopManager : MonoBehaviour
     private LudusManager visualManager;
     // -----------------------------
 
+    private float lastBuyTime = 0f;
+
     [System.Serializable]
     public class RecruitSlot
     {
@@ -184,9 +186,19 @@ public class LudusShopManager : MonoBehaviour
         for (int i = 0; i < 3; i++)
         {
             GladiatorData candidate = new GladiatorData("Mercenary " + Random.Range(1, 100));
+
+            // STATLARI ARTIR
             candidate.Strength += Random.Range(2, 8);
             candidate.MaxHP = candidate.Strength * 10;
             candidate.HP = candidate.MaxHP;
+
+            // --- YENÝ WIN ALGORÝTMASI ---
+            // Gücü ne kadar fazlaysa o kadar çok kazanmýþ olsun.
+            // Örnek: Strength 15 ise -> 15 * (1.5 ile 3.0 arasý) = ~30 Win
+            candidate.Wins = Mathf.RoundToInt(candidate.Strength * Random.Range(1.0f, 3.0f));
+
+            // Fiyatýna Win sayýsý da etki etsin (Ýsteðe baðlý, CalculateValue fonksiyonuna da ekleyebilirsin)
+
             dailyCandidates.Add(candidate);
         }
     }
@@ -219,6 +231,10 @@ public class LudusShopManager : MonoBehaviour
 
     public void BuyCandidate(int index)
     {
+        // 1. ZAMAN KONTROLÜ (Yarým saniyede bir iþlem yapýlabilir)
+        if (Time.time < lastBuyTime + 0.5f) return;
+        lastBuyTime = Time.time;
+
         if (GameManager.I.Gladiators.Count >= 18)
         {
             Debug.Log("Ludus is Full! (Max 18)");

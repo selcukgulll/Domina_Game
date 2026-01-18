@@ -37,6 +37,14 @@ public class LudusManager : MonoBehaviour
 
     private List<GameObject> activeStaff = new List<GameObject>();
 
+    [Header("XP & Level UI")]
+    public Slider XPSlider;
+    public Text LevelText;
+
+    [Header("Panels")]
+    // Campaign panelini de buraya ekleyeceðiz birazdan
+    public GameObject CampaignPanel;
+
     IEnumerator Start()
     {
         yield return null;
@@ -58,6 +66,13 @@ public class LudusManager : MonoBehaviour
         FoodText.text = "Food: " + GameManager.I.Resources.Food;
         WaterText.text = "Water: " + GameManager.I.Resources.Water;
         DayText.text = "Day: " + GameManager.I.Day;
+
+        // --- YENÝ: LEVEL VE XP GÜNCELLEME ---
+        LevelText.text = "Lvl " + GameManager.I.Resources.LudusLevel;
+
+        // Slider deðerini 0 ile 1 arasýna orantýla
+        float fill = GameManager.I.Resources.CurrentXP / GameManager.I.Resources.MaxXP;
+        XPSlider.value = fill;
     }
 
     // Bu fonksiyon sadece sanal ýzgaranýn noktalarýný hesaplar
@@ -228,6 +243,13 @@ public class LudusManager : MonoBehaviour
         GameObject go = Instantiate(prefab, transform);
         go.transform.position = pos;
         activeStaff.Add(go);
+    }
+
+    public void OpenCampaign()
+    {
+        // Global UI Manager kullanýyorsan onu çaðýr, yoksa manuel aç
+        // Örn: FindObjectOfType<LudusShopManager>().CloseAllPanels();
+        CampaignPanel.SetActive(true);
     }
 
 } // <--- SINIF BURADA BÝTÝYOR. ALTINDA BAÞKA KOD OLMAMALI.

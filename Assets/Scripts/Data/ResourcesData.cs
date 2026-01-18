@@ -15,6 +15,10 @@ public class ResourcesData
     public int DoctoreLevel = 1;
     public int FaberLevel = 1;
 
+    public int LudusLevel = 1;
+    public float CurrentXP = 0;
+    public float MaxXP = 100; // Ýlk seviye için gereken XP
+
     public void ConsumeDaily(int gladiatorCount)
     {
         Food -= gladiatorCount;

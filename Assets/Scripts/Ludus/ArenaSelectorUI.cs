@@ -142,7 +142,8 @@ public class ArenaSelectorUI : MonoBehaviour
             // Butonun görünümü seçili mi deðil mi?
             UpdateFighterButtonVisual(btn, txt, g);
 
-            btn.onClick.AddListener(() => {
+            btn.onClick.AddListener(() =>
+            {
                 ToggleFighterSelection(g);
                 UpdateFighterButtonVisual(btn, txt, g); // Týklayýnca rengi güncelle
                 UpdateStartButton();
@@ -198,11 +199,16 @@ public class ArenaSelectorUI : MonoBehaviour
         GameManager.I.SelectedPlayerFighters = new List<GladiatorData>(mySelectedGladiators);
         GameManager.I.EnemyFighter = selectedEnemy;
 
-        // Eðer Exhibition ise yenildi olarak iþaretle
-        if (difficultyIndex != -1)
+        // --- DÜZELTME BURADA ---
+        // Eskiden: if (difficultyIndex != -1) diyorduk. 
+        // -2 (Campaign) de -1 olmadýðý için içeri girip hata veriyordu.
+
+        // YENÝSÝ: Sadece 0 ve üzeri ise (Yani Easy, Medium, Hard ise) bu iþlemi yap.
+        if (difficultyIndex >= 0)
         {
             GameManager.I.ExhibitionDefeated[difficultyIndex] = true;
         }
+        // -----------------------
 
         SceneManager.LoadScene("Arena");
     }
@@ -218,5 +224,27 @@ public class ArenaSelectorUI : MonoBehaviour
     {
         // Hepsini kökten kapat
         if (ArenaWrapperPanel != null) ArenaWrapperPanel.SetActive(false);
+    }
+
+    // CAMPAIGN ÝÇÝN ÖZEL AÇILIÞ
+    public void OpenArenaForCampaign(GladiatorData campaignEnemy)
+    {
+        // 1. Ana Paneli Aç
+        if (ArenaWrapperPanel != null) ArenaWrapperPanel.SetActive(true);
+
+        // 2. Rakip Seçimini Atla, Direkt Karakter Seçimine Geç
+        MatchSelectionPanel.SetActive(false);
+        FighterSelectionPanel.SetActive(true);
+
+        // 3. Rakibi Ayarla
+        selectedEnemy = campaignEnemy; // Campaign'den gelen düþman
+        difficultyIndex = -2; // -2 Campaign demek olsun (Kodlarýn karýþmamasý için)
+
+        // 4. Baþlýk ve Listeyi Yenile
+        MatchTitleText.text = $"Campaign: Vs. {selectedEnemy.Name}";
+
+        mySelectedGladiators.Clear();
+        RefreshMyFighterList();
+        UpdateStartButton();
     }
 }

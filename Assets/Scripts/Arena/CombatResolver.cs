@@ -2,30 +2,32 @@ using UnityEngine;
 
 public static class CombatResolver
 {
-    // DÝKKAT: Ýkinci parametreyi 'GladiatorData' yerine 'GladiatorAI' yaptýk.
-    // Neden? Çünkü AI scripti GameObject'in üzerinde duruyor, görsel scripte (View) oradan ulaþabiliriz.
     public static void Resolve(GladiatorData attackerData, GladiatorAI defenderAI)
     {
-        GladiatorData defenderData = defenderAI.Data; // Datayý AI'dan çek
+        GladiatorData defenderData = defenderAI.Data;
 
         // Hasar Hesabý
         float dmg = attackerData.Strength * Random.Range(0.8f, 1.2f);
         defenderData.HP -= dmg;
 
-        // Debug.Log($"{attackerData.Name} hit {defenderData.Name} for {dmg} damage.");
-
-        // --- ÝÞTE EKSÝK OLAN PARÇA BURASI ---
-        // Vurulan adamýn (defenderAI) üzerindeki GladiatorView scriptini bul
+        // Görsel Efekt (View)
         var view = defenderAI.GetComponent<GladiatorView>();
-
         if (view != null)
         {
-            // "Efekti oynat, can barýný güncelle"
             view.PlayDamageEffect(defenderData.HP, defenderData.MaxHP);
         }
-        // ------------------------------------
 
+        // --- YENÝ MANTIK: ANINDA ÖLÜM BÝLDÝRÝMÝ ---
         if (defenderData.HP <= 0)
+        {
+            // 1. Gore sistemini çalýþtýr (Ses, kan vs.)
             GoreSystem.Kill(defenderData);
+
+            // 2. ArenaManager'a haber ver (Eðer sahnedeysek)
+            if (ArenaManager.I != null)
+            {
+                ArenaManager.I.OnFighterDied(defenderData);
+            }
+        }
     }
 }
