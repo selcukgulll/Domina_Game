@@ -43,9 +43,9 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -134,7 +134,91 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: MenuWindows_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 701.5
+        width: 1063
+        height: 701.5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 314120e9b2559364a94cce3dd936ba04
+      internalID: -650513885
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MenuWindows_1
+      rect:
+        serializedVersion: 2
+        x: 1063
+        y: 701.5
+        width: 1063
+        height: 701.5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 334110afa60e3e34181d86f1b1e789f0
+      internalID: -1794538653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MenuWindows_2
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0.5
+        width: 1063
+        height: 701.5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 440ec0fb4e3d5074094a879beb6d7611
+      internalID: 999353470
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MenuWindows_3
+      rect:
+        serializedVersion: 2
+        x: 1063
+        y: 0.5
+        width: 1063
+        height: 701.5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e07df84720b58174aaaeb3b774caa255
+      internalID: 381690993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -145,7 +229,11 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      MenuWindows_0: -650513885
+      MenuWindows_1: -1794538653
+      MenuWindows_2: 999353470
+      MenuWindows_3: 381690993
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
