@@ -20,7 +20,9 @@ public class GladiatorData
     public float Aggression; // Saldýrý sýklýðý
     public float Mentality;  // Stat çarpaný (1.0 = Normal, 1.2 = Boosted)
     public int XP;
-    
+
+    public int BodyTypeIndex = 0;
+
 
     public bool IsAlive => HP > 0;
     public int Wins = 0;
@@ -42,6 +44,8 @@ public class GladiatorData
         XP = 0;
 
         Wins = 0;
+
+        BodyTypeIndex = Random.Range(0, 3);
     }
 
     public void GainXP(int amount)

@@ -22,6 +22,15 @@ public class GladiatorView : MonoBehaviour
     private bool isArenaMode = false;
     private bool isEnemy = false;
 
+    [Header("Animation")]
+    public Animator UnitAnimator; // Inspector'dan Animator'ý buraya sürükle!
+    private static readonly int AttackHash = Animator.StringToHash("Attack");
+    private static readonly int AttackIndexHash = Animator.StringToHash("AttackIndex");
+    private static readonly int HitHash = Animator.StringToHash("Hit");
+    private static readonly int DeathHash = Animator.StringToHash("Death");
+    private static readonly int Run1Hash = Animator.StringToHash("Run1");
+
+
     // --- ÖNEMLÝ: Fonksiyonu 3 parametreli yaptýk ---
     public void Bind(GladiatorData data, bool arenaContext = false, bool enemyFlag = false)
     {
@@ -44,13 +53,9 @@ public class GladiatorView : MonoBehaviour
             // Mantýk: Canvas'ýn mevcut boyutu neyse (0.005 falan olabilir) onu al,
             // ama iþaretini (+ veya -) babasýnýn yönüne göre ayarla.
 
-            float currentSizeX = Mathf.Abs(CanvasObj.localScale.x); // Boyutu pozitif olarak al
+            float currentSizeX = Mathf.Abs(CanvasObj.localScale.x);
+            CanvasObj.localScale = new Vector3(currentSizeX, CanvasObj.localScale.y, CanvasObj.localScale.z);
 
-            // Eðer karakter sola bakýyorsa (-), Canvas da (-) olsun ki çarpýmlarý (+) çýksýn.
-            float direction = (transform.localScale.x < 0) ? -1f : 1f;
-
-            // Sadece X eksenini etkile, Y ve Z olduðu gibi kalsýn
-            CanvasObj.localScale = new Vector3(currentSizeX * direction, CanvasObj.localScale.y, CanvasObj.localScale.z);
         }
     }
 
@@ -103,4 +108,46 @@ public class GladiatorView : MonoBehaviour
         }
         // Ýlerde buraya "Hit" animasyonu eklenebilir
     }
+
+    public void PlayHit()
+    {
+        if (UnitAnimator == null) return;
+        UnitAnimator.SetTrigger(HitHash);
+    }
+
+    public void PlayDeath()
+    {
+        if (UnitAnimator == null) return;
+        UnitAnimator.SetTrigger(DeathHash);
+    }
+
+
+    // Koþma animasyonunu açýp kapatan fonksiyon
+    public void SetRunning(bool isRunning)
+    {
+        if (UnitAnimator != null)
+            UnitAnimator.SetBool(Run1Hash, isRunning);
+    }
+
+    public void SetFacing(bool faceRight)
+    {
+        // BodyRenderer atanmýþsa onu flip et
+        if (BodyRenderer != null)
+            BodyRenderer.flipX = !faceRight;
+
+        // Eðer bazý variant prefablarýnda sprite BodyRenderer deðil de child'lardaysa,
+        // garanti olsun diye hepsini flipleyelim:
+        foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true))
+            sr.flipX = !faceRight;
+    }
+
+
+    public void PlayAttack(int attackIndex)
+    {
+        if (UnitAnimator == null) return;
+        UnitAnimator.SetInteger(AttackIndexHash, attackIndex);
+        UnitAnimator.SetTrigger(AttackHash);
+    }
+
+
 }

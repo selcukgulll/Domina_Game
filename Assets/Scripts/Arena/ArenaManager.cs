@@ -8,7 +8,7 @@ public class ArenaManager : MonoBehaviour
     public static ArenaManager I;
 
     [Header("Setup")]
-    public GameObject GladiatorPrefab;
+    public GameObject[] GladiatorPrefabs; // Array yaptýk
     public Transform SpawnPoint1; // Player için
     public Transform SpawnPoint2; // Enemy için
 
@@ -62,7 +62,10 @@ public class ArenaManager : MonoBehaviour
     GameObject SpawnFighter(GladiatorData data, Transform spawnPoint, bool isEnemy)
     {
         // 1. Prefab'ý yarat
-        GameObject go = Instantiate(GladiatorPrefab, spawnPoint.position, Quaternion.identity);
+        int prefabIndex = data.BodyTypeIndex % GladiatorPrefabs.Length;
+        GameObject prefabToUse = GladiatorPrefabs[prefabIndex];
+
+        GameObject go = Instantiate(prefabToUse, spawnPoint.position, Quaternion.identity);
 
         // 2. AI Verisini Ata
         var ai = go.GetComponent<GladiatorAI>();
@@ -79,11 +82,23 @@ public class ArenaManager : MonoBehaviour
             view.Bind(data, true, isEnemy);
         }
 
-        // 5. Düþmaný Ters Çevir (Yüzü sola baksýn)
-        if (isEnemy)
+
+        if (ai != null)
         {
-            go.transform.localScale = new Vector3(-1, 1, 1);
+            ai.enabled = true;             // Beyni çalýþtýr
+            ai.IsCombatMode = true;        // ARENA MODU (Saldýr!)
+            ai.State = AIState.Approach;   // "Koþ" emriyle baþla
+            // Arena'da drag kapalý (root + child'lar dahil)
+            foreach (var drag in go.GetComponentsInChildren<GladiatorDrag>(true))
+                drag.enabled = false;
+
         }
+
+        // Collider'ý Trigger yap (Birbirini itip titremesinler)
+        BoxCollider2D col = go.GetComponent<BoxCollider2D>();
+        if (col != null) col.isTrigger = true;
+
+        return go;
 
         return go;
     }

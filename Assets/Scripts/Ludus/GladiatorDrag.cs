@@ -3,94 +3,104 @@ using UnityEngine.EventSystems;
 
 public class GladiatorDrag : MonoBehaviour
 {
-    private bool isDragging = false; // Şu an sürükleniyor mu?
-    private bool isClickPotential = true; // Tıklama olma ihtimali var mı?
+    private bool isDragging = false;
+    private bool isClickPotential = true;
 
     private Vector3 offset;
     private Vector3 originalPosition;
-    private Vector3 clickStartPosition; // Tıklamanın başladığı yer
+    private Vector3 clickStartPosition;
+    private float dragThreshold = 0.2f;
 
     private LudusManager manager;
     private GladiatorView view;
 
-    // Panelleri burada tutacağız
-    private GameObject[] BlockingPanels;
+    private int originalSlotIndex = -1;
 
-    // Sürükleme sayılması için ne kadar hareket etmeli? (0.2 birim)
-    private float dragThreshold = 0.2f;
+    bool IsPointerOverUI()
+    { // Mouse/touch UI üzerindeyse true döner
+     return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+    }
 
     void Start()
     {
         manager = FindObjectOfType<LudusManager>();
         view = GetComponent<GladiatorView>();
-
-        var shopManager = FindObjectOfType<LudusShopManager>();
-        var arenaUI = FindObjectOfType<ArenaSelectorUI>();
-
-        if (shopManager != null && arenaUI != null)
-        {
-            BlockingPanels = new GameObject[] {
-                shopManager.MarketPanel,
-                shopManager.RecruitPanel,
-                shopManager.StaffPanel,
-                arenaUI.ArenaWrapperPanel
-            };
-        }
-        else
-        {
-            BlockingPanels = new GameObject[0];
-        }
     }
 
     void OnMouseDown()
     {
-        // 1. MANAGER KONTROLÜ
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Arena") return;
+        if (IsPointerOverUI()) return;
+        
+
+
+        originalSlotIndex = (view != null && view.Data != null) ? view.Data.GridIndex : -1;
+
+        // 1. MANAGER YOKSA HİÇ ÇALIŞMA
         if (manager == null) return;
 
-        // 2. UI KORUMASI
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
-
-        // 3. PANEL KORUMASI
-        if (BlockingPanels != null)
+        // 2. UI KORUMASI (EventSystem)
+        // Eğer fare şu an bir UI elemanının (Buton, Panel vs.) üzerindeyse, alttaki kodları çalıştırma.
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
-            foreach (GameObject panel in BlockingPanels)
-            {
-                if (panel != null && panel.activeSelf) return;
-            }
+            return;
         }
 
-        // --- HAZIRLIK ---
+        // 3. PANEL KORUMASI (Manuel Kontrol - Çifte Dikiş)
+        // Eğer EventSystem kaçırırsa diye, açık panelleri manuel kontrol et.
+        if (IsAnyPanelOpen()) return;
+
+        // --- TIKLAMA İŞLEMLERİ BAŞLIYOR ---
         originalPosition = transform.position;
-        clickStartPosition = GetMouseWorldPos(); // Başlangıç noktasını kaydet
+        clickStartPosition = GetMouseWorldPos();
         offset = transform.position - GetMouseWorldPos();
 
-        isDragging = false;       // Henüz sürüklemiyoruz
-        isClickPotential = true;  // Tıklama olabilir
+        isDragging = false;
+        isClickPotential = true;
+    }
+
+    // Açık panel var mı diye kontrol eden yardımcı fonksiyon
+    bool IsAnyPanelOpen()
+    {
+        // ShopManager'ı her seferinde taze bul (Performans kaybı olmaz, tıklama anında çalışır)
+        var shopManager = FindObjectOfType<LudusShopManager>();
+        if (shopManager != null)
+        {
+            if (shopManager.MarketPanel != null && shopManager.MarketPanel.activeSelf) return true;
+            if (shopManager.RecruitPanel != null && shopManager.RecruitPanel.activeSelf) return true;
+            if (shopManager.StaffPanel != null && shopManager.StaffPanel.activeSelf) return true;
+        }
+
+        var arenaUI = FindObjectOfType<ArenaSelectorUI>();
+        if (arenaUI != null)
+        {
+            if (arenaUI.ArenaWrapperPanel != null && arenaUI.ArenaWrapperPanel.activeSelf) return true;
+        }
+
+        return false;
     }
 
     void OnMouseDrag()
     {
-        // Mouse'un şu anki konumu
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Arena") return;
+        // UI üzerindeyken sürüklemeye devam etmesin
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
         Vector3 currentMousePos = GetMouseWorldPos();
 
-        // Eğer henüz "Sürükleme Modu"na girmediysek, mesafeyi ölçelim
         if (!isDragging)
         {
             float distance = Vector3.Distance(currentMousePos, clickStartPosition);
-
-            // Eğer fare yeterince hareket ettiyse, artık bu bir TIKLAMA DEĞİL, SÜRÜKLEMEDİR.
             if (distance > dragThreshold)
             {
                 isDragging = true;
-                isClickPotential = false; // Artık tıklama olamaz
-
-                // Görsel Efekt: Sürükleme başladığında büyüt
+                isClickPotential = false;
                 transform.localScale = Vector3.one * 1.2f;
-                GetComponent<SpriteRenderer>().sortingOrder = 10;
+                var sr = GetComponent<SpriteRenderer>();
+                if (sr) sr.sortingOrder = 10;
             }
         }
 
-        // Eğer sürükleme modundaysak objeyi taşı
         if (isDragging)
         {
             transform.position = currentMousePos + offset;
@@ -99,24 +109,24 @@ public class GladiatorDrag : MonoBehaviour
 
     void OnMouseUp()
     {
-        // Önce görseli düzelt (Her durumda eski boyuta dönecek)
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Arena") return;
+        if (IsPointerOverUI()) return;
         transform.localScale = Vector3.one;
-        GetComponent<SpriteRenderer>().sortingOrder = 0;
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr) sr.sortingOrder = 0;
 
-        // --- SENARYO 1: SADECE TIKLAMA (HİÇ SÜRÜKLENMEDİ) ---
         if (isClickPotential && !isDragging)
         {
-            // İstatistik Panelini Aç!
-            if (GladiatorUI.I != null && view != null)
+            // UI üzerine bırakılmadıysa işlem yap
+            if (!IsAnyPanelOpen())
             {
-                GladiatorUI.I.Show(view.Data, transform);
+                if (GladiatorUI.I != null && view != null)
+                {
+                    GladiatorUI.I.Show(view.Data, transform);
+                }
             }
-
-            // Pozisyonu bozma, eski yerine oturt (hafif kayma varsa diye)
             transform.position = originalPosition;
         }
-
-        // --- SENARYO 2: SÜRÜKLEME BİTTİ ---
         else if (isDragging)
         {
             isDragging = false;
@@ -124,19 +134,19 @@ public class GladiatorDrag : MonoBehaviour
             if (manager != null)
             {
                 int nearestSlot = manager.GetNearestSlotIndex(transform.position);
-                Vector3 targetPos = manager.GetSlotPosition(nearestSlot);
-                transform.position = targetPos;
 
-                if (view != null && view.Data != null)
-                {
-                    view.Data.GridIndex = nearestSlot;
-                }
+                // Swap / place işlemini manager yapsın
+                if (view != null)
+                    manager.PlaceOrSwap(view, nearestSlot, originalSlotIndex);
+                else
+                    transform.position = originalPosition;
             }
             else
             {
                 transform.position = originalPosition;
             }
         }
+
     }
 
     Vector3 GetMouseWorldPos()

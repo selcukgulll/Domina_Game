@@ -159,9 +159,9 @@ public class LudusShopManager : MonoBehaviour
 
     public void BuyRandomSlave()
     {
-        if (GameManager.I.Gladiators.Count >= 18)
+        if (GameManager.I.Gladiators.Count >= 12)
         {
-            Debug.Log("Ludus is Full! (Max 18)");
+            Debug.Log("Ludus is Full! (Max 12)");
             return;
         }
         int cost = 100;
@@ -235,9 +235,9 @@ public class LudusShopManager : MonoBehaviour
         if (Time.time < lastBuyTime + 0.5f) return;
         lastBuyTime = Time.time;
 
-        if (GameManager.I.Gladiators.Count >= 18)
+        if (GameManager.I.Gladiators.Count >= 12)
         {
-            Debug.Log("Ludus is Full! (Max 18)");
+            Debug.Log("Ludus is Full! (Max 12)");
             return;
         }
 

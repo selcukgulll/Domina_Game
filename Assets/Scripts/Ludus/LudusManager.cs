@@ -15,14 +15,16 @@ public class LudusManager : MonoBehaviour
 
     [Header("References")]
     public Transform GardenArea;
-    public GameObject GladiatorPrefab;
+    [Header("Prefabs")]
+    // Artýk tek bir tane deðil, liste olacak
+    public GameObject[] GladiatorPrefabs;
 
     [Header("Grid Settings")]
     public int Columns = 6;
-    public int TotalSlots = 18;   // 3x6 = 18 slot
-    public float SpacingX = 1.6f;
-    public float SpacingY = 2.0f;
-    public float VerticalBias = -0.5f;
+    public int TotalSlots = 12;   // 3x6 = 18 slot
+    public float SpacingX = 2.4f;    // Yan yana açýlma (1.6'ydý, artýrdýk)
+    public float SpacingY = 3.5f;    // Alt alta açýlma (2.0'dý, bayaðý artýrdýk)
+    public float VerticalBias = -1.5f; // Aþaðý kaydýrma (-0.5'ti, daha aþaðý aldýk)
 
     // Slotlarýn dünya üzerindeki pozisyonlarýný tutan liste
     private List<Vector3> slotPositions = new List<Vector3>();
@@ -80,7 +82,10 @@ public class LudusManager : MonoBehaviour
     {
         slotPositions.Clear();
 
-        Vector3 screenCenter = Camera.main.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 10f));
+        Vector3 screenCenter = Camera.main.ViewportToWorldPoint(
+            new Vector3(0.5f, 0.5f, 10f)
+        );
+
         screenCenter.z = 0;
         screenCenter.y += VerticalBias;
 
@@ -106,45 +111,113 @@ public class LudusManager : MonoBehaviour
     public void SpawnGladiators()
     {
         if (GameManager.I == null) return;
+
+        // 0. TAZE POZÝSYON HESABI
+        CalculateSlotPositions();
+
+        // 1. SAHNE TEMÝZLÝÐÝ (Eski objeleri sil, veriler GameManager'da duruyor)
         foreach (Transform child in GardenArea) Destroy(child.gameObject);
 
         var livingGladiators = GameManager.I.Gladiators.Where(g => g.IsAlive).ToList();
 
-        // --- Evi Olmayanlara Yer Bul ---
-        List<int> occupiedSlots = livingGladiators
-            .Where(g => g.GridIndex != -1)
-            .Select(g => g.GridIndex)
-            .ToList();
+        // --- DÜZELTME BURADA: MEVCUT YERLERÝ KÝLÝTLE ---
+        // Önce kimlerin yeri zaten var, onlarý bir listeye not et.
+        List<int> occupiedSlots = new List<int>();
 
         foreach (var g in livingGladiators)
         {
+            // Eðer geçerli bir slotu varsa (-1 deðilse ve 18'den küçükse)
+            if (g.GridIndex >= 0 && g.GridIndex < TotalSlots)
+            {
+                // Bu koltuk doludur, listeye ekle.
+                occupiedSlots.Add(g.GridIndex);
+            }
+            else
+            {
+                // Eðer saçma bir sayýysa (örn 500), onu -1 yap ki aþaðýda yeni yer bulalým.
+                g.GridIndex = -1;
+            }
+        }
+
+        // --- ÞÝMDÝ SADECE EVSÝZLERE YER BUL ---
+        foreach (var g in livingGladiators)
+        {
+            // Sadece yeri olmayanlar (-1) için döngüye gir
             if (g.GridIndex == -1)
             {
                 for (int i = 0; i < TotalSlots; i++)
                 {
+                    // Eðer bu koltuk (i) dolu listesinde YOKSA
                     if (!occupiedSlots.Contains(i))
                     {
-                        g.GridIndex = i;
-                        occupiedSlots.Add(i);
-                        break;
+                        g.GridIndex = i;        // Adamý buraya oturt
+                        occupiedSlots.Add(i);   // Koltuðu dolu iþaretle
+                        break;                  // Döngüden çýk, sýradaki adama geç
                     }
                 }
             }
         }
 
+        // 3. YARATMA (GÖRSELLEÞTÝRME)
         foreach (var g in livingGladiators)
         {
             if (g.GridIndex >= 0 && g.GridIndex < slotPositions.Count)
             {
-                var go = Instantiate(GladiatorPrefab, GardenArea);
-                var view = go.GetComponent<GladiatorView>();
-                if (view != null) view.Bind(g);
-
-                go.transform.position = slotPositions[g.GridIndex];
-
-                if (g.CurrentState == GladiatorState.Resting)
+                GameObject prefabToUse = null;
+                if (GladiatorPrefabs != null && GladiatorPrefabs.Length > 0)
                 {
-                    go.GetComponent<SpriteRenderer>().color = Color.gray;
+                    int index = Mathf.Max(0, g.BodyTypeIndex);
+                    prefabToUse = GladiatorPrefabs[index % GladiatorPrefabs.Length];
+                }
+
+                if (prefabToUse != null)
+                {
+                    var go = Instantiate(prefabToUse, GardenArea);
+
+                    // A) VERÝYÝ BAÐLA
+                    var view = go.GetComponent<GladiatorView>();
+                    if (view != null) view.Bind(g);
+
+                    // B) YAPAY ZEKAYI AYARLA (LUDUS MODU)
+                    var ai = go.GetComponent<GladiatorAI>();
+                    if (ai != null)
+                    {
+                        ai.enabled = true;
+                        ai.IsCombatMode = false;   // Barýþ modu
+                        ai.WanderRadius = 2.0f;
+                    }
+
+                    // C) ANÝMASYONU "IDLE" BAÞLAT
+                    var anim = go.GetComponent<Animator>();
+                    if (anim != null)
+                    {
+                        // "IsRunning" bool'unu false yap, Idle çalsýn
+                        anim.SetBool("Run1", false);
+                    }
+
+                    // D) FÝZÝÐÝ KAPAT (Kinematic)
+                    Rigidbody2D rb = go.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                    {
+                        rb.bodyType = RigidbodyType2D.Kinematic;
+                        rb.velocity = Vector2.zero;
+                        rb.gravityScale = 0f;
+                    }
+
+                    // E) COLLIDER (TRIGGER OLSUN - SÜRÜKLEME ÝÇÝN)
+                    BoxCollider2D col = go.GetComponent<BoxCollider2D>();
+                    if (col != null) col.isTrigger = true;
+
+                    // F) POZÝSYON
+                    go.transform.position = slotPositions[g.GridIndex];
+
+                    // Renk (Resting ise gri)
+                    if (g.CurrentState == GladiatorState.Resting)
+                    {
+                        var sr = go.GetComponent<SpriteRenderer>();
+                        if (sr == null) sr = go.GetComponentInChildren<SpriteRenderer>();
+                        if (sr != null) sr.color = Color.gray;
+                    }
                 }
             }
         }
@@ -251,5 +324,45 @@ public class LudusManager : MonoBehaviour
         // Örn: FindObjectOfType<LudusShopManager>().CloseAllPanels();
         CampaignPanel.SetActive(true);
     }
+
+    public void PlaceOrSwap(GladiatorView draggedView, int targetSlot, int originalSlot)
+    {
+        if (GameManager.I == null) return;
+        if (draggedView == null || draggedView.Data == null) return;
+
+        targetSlot = Mathf.Clamp(targetSlot, 0, TotalSlots - 1);
+        originalSlot = Mathf.Clamp(originalSlot, 0, TotalSlots - 1);
+
+        if (targetSlot == originalSlot)
+        {
+            draggedView.transform.position = GetSlotPosition(originalSlot);
+            return;
+        }
+
+        var draggedData = draggedView.Data;
+
+        // Hedef slotta baþka biri var mý?
+        var otherData = GameManager.I.Gladiators
+            .FirstOrDefault(g => g != draggedData && g.IsAlive && g.GridIndex == targetSlot);
+
+        if (otherData != null)
+        {
+            // Diðerini eski slota taþý
+            otherData.GridIndex = originalSlot;
+
+            var otherView = GardenArea
+                .GetComponentsInChildren<GladiatorView>(true)
+                .FirstOrDefault(v => v != null && v.Data == otherData);
+
+            if (otherView != null)
+                otherView.transform.position = GetSlotPosition(originalSlot);
+        }
+
+        // Sürüklenen kiþiyi hedef slota koy
+        draggedData.GridIndex = targetSlot;
+        draggedView.transform.position = GetSlotPosition(targetSlot);
+    }
+
+
 
 } // <--- SINIF BURADA BÝTÝYOR. ALTINDA BAÞKA KOD OLMAMALI.

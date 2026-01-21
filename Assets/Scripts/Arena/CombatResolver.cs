@@ -10,23 +10,27 @@ public static class CombatResolver
         float dmg = attackerData.Strength * Random.Range(0.8f, 1.2f);
         defenderData.HP -= dmg;
 
-        // Görsel Efekt (View)
+        // GÖRSEL EFEKTLER (View)
         var view = defenderAI.GetComponent<GladiatorView>();
         if (view != null)
         {
-            view.PlayDamageEffect(defenderData.HP, defenderData.MaxHP);
-        }
+            view.RefreshVisuals(); // Can barýný güncelle
 
-        // --- YENÝ MANTIK: ANINDA ÖLÜM BÝLDÝRÝMÝ ---
-        if (defenderData.HP <= 0)
-        {
-            // 1. Gore sistemini çalýþtýr (Ses, kan vs.)
-            GoreSystem.Kill(defenderData);
-
-            // 2. ArenaManager'a haber ver (Eðer sahnedeysek)
-            if (ArenaManager.I != null)
+            // --- YENÝ: ANÝMASYONLAR ---
+            if (defenderData.HP > 0)
             {
-                ArenaManager.I.OnFighterDied(defenderData);
+                // Hâlâ yaþýyorsa hasar animasyonu
+                view.PlayHit();
+                defenderAI.GetHit();
+            }
+            else
+            {
+                // Öldüyse ölüm animasyonu
+                // NOT: GoreSystem.Kill çaðýrmadan önce animasyonu oynatýyoruz
+                view.PlayDeath();
+
+                // ArenaManager'a bildir
+                if (ArenaManager.I != null) ArenaManager.I.OnFighterDied(defenderData);
             }
         }
     }
