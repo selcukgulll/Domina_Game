@@ -24,6 +24,13 @@ public class GameManager : MonoBehaviour
     public List<CampaignMission> CampaignMissions = new List<CampaignMission>();
     public int CurrentMissionIndex = -1;
 
+    public int GlobalGladiatorIDCounter = 1000; // 1000'den baþlasýn
+
+    public int GetNextGladiatorID()
+    {
+        return GlobalGladiatorIDCounter++;
+    }
+
     public GladiatorData PlayerFighter
     {
         get { return SelectedPlayerFighters.Count > 0 ? SelectedPlayerFighters[0] : null; }
@@ -42,7 +49,7 @@ public class GameManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
             if (Gladiators.Count == 0)
             {
-                GladiatorData starter = new GladiatorData("Slave " + Random.Range(100, 999));
+                GladiatorData starter = new GladiatorData(GetNextGladiatorID());
                 starter.Strength += 5;
                 starter.HP = starter.MaxHP;
                 Gladiators.Add(starter);
@@ -109,7 +116,7 @@ public class GameManager : MonoBehaviour
         ExhibitionOpponents.Clear();
 
         // 1. EASY
-        var easy = new GladiatorData(GetRandomName("Novice"));
+        var easy = new GladiatorData(GetNextGladiatorID());
         easy.Strength = Random.Range(5, 9);
         easy.Agility = Random.Range(5, 9);
         easy.MaxHP = easy.Strength * 8;
@@ -117,7 +124,7 @@ public class GameManager : MonoBehaviour
         ExhibitionOpponents.Add(easy);
 
         // 2. MEDIUM
-        var med = new GladiatorData(GetRandomName("Warrior"));
+        var med = new GladiatorData(GetNextGladiatorID());
         med.Strength = Random.Range(12, 16);
         med.Agility = Random.Range(10, 14);
         med.MaxHP = med.Strength * 10;
@@ -125,7 +132,7 @@ public class GameManager : MonoBehaviour
         ExhibitionOpponents.Add(med);
 
         // 3. HARD
-        var hard = new GladiatorData(GetRandomName("Champion"));
+        var hard = new GladiatorData(GetNextGladiatorID());
         hard.Strength = Random.Range(20, 28);
         hard.Agility = Random.Range(18, 25);
         hard.MaxHP = hard.Strength * 12;
@@ -233,7 +240,7 @@ public class GameManager : MonoBehaviour
         m.GoldReward = gold;
         m.XPReward = xp;
 
-        GladiatorData enemy = new GladiatorData(eName);
+        GladiatorData enemy = new GladiatorData(GetNextGladiatorID());
         enemy.Strength = str;
         enemy.Agility = str * 0.8f;
         enemy.MaxHP = hp;

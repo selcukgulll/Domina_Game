@@ -6,6 +6,7 @@ public enum GladiatorState { Idle, Training, Resting } // State eklendi
 [System.Serializable]
 public class GladiatorData
 {
+    public int ID;
     public string Name;
     public GladiatorClass Class;
     public GladiatorState CurrentState = GladiatorState.Idle; // O an ne yapýyor?
@@ -28,9 +29,10 @@ public class GladiatorData
     public int Wins = 0;
 
     // Constructor (Rastgele statlar için)
-    public GladiatorData(string name)
+    public GladiatorData(int gladiatorid)
     {
-        Name = name;
+        this.ID = gladiatorid;
+        Name = AncientNames.RandomName();
         Class = (GladiatorClass)Random.Range(0, 3);
 
         Strength = Random.Range(5, 15);
@@ -45,7 +47,7 @@ public class GladiatorData
 
         Wins = 0;
 
-        BodyTypeIndex = Random.Range(0, 3);
+        BodyTypeIndex = Random.Range(0, 2);
     }
 
     public void GainXP(int amount)

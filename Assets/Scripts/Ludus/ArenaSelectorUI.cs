@@ -103,7 +103,7 @@ public class ArenaSelectorUI : MonoBehaviour
 
         if (index == -1) // Pit ise rastgele yarat
         {
-            selectedEnemy = new GladiatorData("Pit Fighter " + Random.Range(10, 99));
+            selectedEnemy = new GladiatorData(GameManager.I.GetNextGladiatorID());
             // Pit zorluk ayarlarý...
             float mult = 1.0f + (GameManager.I.Day * 0.1f);
             selectedEnemy.Strength *= mult; selectedEnemy.MaxHP *= mult; selectedEnemy.HP = selectedEnemy.MaxHP;

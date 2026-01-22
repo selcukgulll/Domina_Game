@@ -40,6 +40,14 @@ public class GladiatorAI : MonoBehaviour
     public float KnockbackDistance = 0.25f;
     public float KnockbackTime = 0.08f;
 
+    private Vector2 desiredPoint;
+    private float nextRepathTime = 0f;
+
+    public float RepathInterval = 0.6f;   // kaç saniyede bir yeni nokta seçsin
+    public float StrafeRadius = 1.6f;     // hedefin etrafýnda ne kadar dolaþsýn
+    public float StrafeJitter = 0.4f;     // rastgelelik
+
+
 
     float GetAgilitySpeedMul()
     {
@@ -117,6 +125,8 @@ public class GladiatorAI : MonoBehaviour
             return;
         }
 
+        var arena = FindObjectOfType<ArenaManager>();
+
         if (State == AIState.Stunned) { GetComponent<GladiatorView>().SetRunning(false); return; }
 
         float dist = Vector2.Distance(transform.position, Target.position);
@@ -144,7 +154,28 @@ public class GladiatorAI : MonoBehaviour
         if (State == AIState.Approach)
         {
             float moveSpeed = BaseMoveSpeed * (1f + (Data.Agility * AgilityMoveBonus));
-            transform.position = Vector2.MoveTowards(transform.position, Target.position, moveSpeed * Time.deltaTime);
+            if (Time.time >= nextRepathTime || desiredPoint == Vector2.zero)
+            {
+                nextRepathTime = Time.time + RepathInterval;
+
+                Vector2 targetPos = Target.position;
+
+                // hedefin etrafýnda rastgele bir nokta seç
+                float angle = Random.Range(0f, Mathf.PI * 2f);
+                float r = StrafeRadius + Random.Range(-StrafeJitter, StrafeJitter);
+
+                Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * r;
+
+                Vector2 candidate = targetPos + offset;
+
+                // elips sýnýrýna clamp
+                if (arena != null)
+                    candidate = arena.ClampToArena(candidate);
+
+                desiredPoint = candidate;
+            }
+            Vector2 to = desiredPoint;
+            transform.position = Vector2.MoveTowards(transform.position, to, moveSpeed * Time.deltaTime);
         }
         else if (State == AIState.Attack)
         {

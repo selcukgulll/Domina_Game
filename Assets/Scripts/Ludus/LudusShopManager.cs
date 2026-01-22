@@ -168,7 +168,7 @@ public class LudusShopManager : MonoBehaviour
         if (GameManager.I.Resources.Gold >= cost)
         {
             GameManager.I.Resources.Gold -= cost;
-            GameManager.I.Gladiators.Add(new GladiatorData("Slave " + Random.Range(100, 999)));
+            GameManager.I.Gladiators.Add(new GladiatorData(GameManager.I.GetNextGladiatorID()));
 
             UpdateGoldUI();
 
@@ -185,7 +185,7 @@ public class LudusShopManager : MonoBehaviour
         dailyCandidates.Clear();
         for (int i = 0; i < 3; i++)
         {
-            GladiatorData candidate = new GladiatorData("Mercenary " + Random.Range(1, 100));
+            GladiatorData candidate = new GladiatorData(GameManager.I.GetNextGladiatorID());
 
             // STATLARI ARTIR
             candidate.Strength += Random.Range(2, 8);

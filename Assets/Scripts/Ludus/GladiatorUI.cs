@@ -124,7 +124,7 @@ public class GladiatorUI : MonoBehaviour
         }
 
         GameManager.I.PlayerFighter = currentData;
-        GameManager.I.EnemyFighter = new GladiatorData("Enemy Slave");
+        GameManager.I.EnemyFighter = new GladiatorData(GameManager.I.GetNextGladiatorID());
 
         SceneManager.LoadScene("Arena");
     }
