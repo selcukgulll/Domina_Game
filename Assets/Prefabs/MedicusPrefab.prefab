@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6801694453481980687}
   - component: {fileID: -7212438811275118806}
   - component: {fileID: 8343452125766195669}
+  - component: {fileID: -5659837376719201818}
   m_Layer: 0
   m_Name: MedicusPrefab
   m_TagString: Untagged
@@ -129,7 +130,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 15.39, y: 12.77}
   m_EdgeRadius: 0
 --- !u!114 &8343452125766195669
 MonoBehaviour:
@@ -144,3 +145,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 0
+--- !u!114 &-5659837376719201818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6977600205725849690}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c26f6159253f70b4e968faf9e9430f6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  punchScale: 1.25
+  duration: 0.2

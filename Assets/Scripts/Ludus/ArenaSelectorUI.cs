@@ -44,10 +44,11 @@ public class ArenaSelectorUI : MonoBehaviour
         if (ArenaWrapperPanel != null) ArenaWrapperPanel.SetActive(false);
     }
 
-    public void OpenArena()
+    public void ToggleArena()
     {
-        // Önce ana kutuyu aç (Ki içindekiler görünebilsin)
-        if (ArenaWrapperPanel != null) ArenaWrapperPanel.SetActive(true);
+        bool isOpen = (ArenaWrapperPanel != null && ArenaWrapperPanel.activeSelf);
+
+        if (ArenaWrapperPanel != null) ArenaWrapperPanel.SetActive(!isOpen);
 
         MatchSelectionPanel.SetActive(true);
         FighterSelectionPanel.SetActive(false);
@@ -247,4 +248,25 @@ public class ArenaSelectorUI : MonoBehaviour
         RefreshMyFighterList();
         UpdateStartButton();
     }
+
+
+    public void OpenPitMatchFromLudus()
+    {
+        // 1) Arena panelini aç ve iç state'i resetle
+        ToggleArena(); // parametresiz
+
+        // 2) Pit seçilmiþ gibi davran
+        OnMatchSelected(null, -1);
+    }
+
+
+    public void TogglePitMatch()
+    {
+        bool isOpen = ArenaWrapperPanel != null && ArenaWrapperPanel.activeSelf;
+        if (isOpen) ClosePanel();
+        else OpenPitMatchFromLudus();
+    }
+
+
+
 }

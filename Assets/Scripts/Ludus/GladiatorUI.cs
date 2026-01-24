@@ -40,8 +40,8 @@ public class GladiatorUI : MonoBehaviour
 
             // Paneli biraz saða ve yukarý kaydýr (Karakterin tam üstüne binmesin)
             // Bu sayýlarý (150, 50) ekran çözünürlüðüne göre artýrýp azaltabilirsin
-            screenPos.x += 150;
-            screenPos.y += 50;
+            screenPos.x += 70;
+            screenPos.y += 20;
 
             StatsPanel.transform.position = screenPos;
         }
@@ -99,19 +99,29 @@ public class GladiatorUI : MonoBehaviour
     public void OnWineClicked()
     {
         if (currentData == null) return;
+        if (GameManager.I == null) return;
 
-        if (GameManager.I.Resources.Gold >= 10 && GameManager.I.Resources.Wine > 0)
+        // Yeterli wine var mý?
+        if (GameManager.I.Resources.Wine <= 0)
         {
-            GameManager.I.Resources.Gold -= 10;
-            GameManager.I.Resources.Wine--;
-
-            currentData.Mentality += 0.1f;
-            currentData.HP = Mathf.Min(currentData.MaxHP, currentData.HP + 10);
-
-            Debug.Log("Wine given to " + currentData.Name);
-            RefreshInfo();
+            return;
         }
+
+        // SADECE WINE AZALT
+        GameManager.I.Resources.Wine--;
+
+        // Etkiler
+        currentData.Mentality += 0.1f;
+        currentData.HP = Mathf.Min(currentData.MaxHP, currentData.HP + 10);
+
+        // Sadece gladyatör panelini yenile
+        RefreshInfo();
+
+        var ludus = FindObjectOfType<LudusManager>();
+        if (ludus != null)
+            ludus.UpdateUI();
     }
+
 
     public void OnFightClicked()
     {

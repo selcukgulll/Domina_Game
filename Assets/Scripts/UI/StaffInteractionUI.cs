@@ -29,8 +29,18 @@ public class StaffInteractionUI : MonoBehaviour
     }
 
     // Bu fonksiyonu prefablar çaðýracak
-    public void OpenPanel(StaffType type)
+    public void ToggleStaff(StaffType type)
     {
+        // Panel yoksa çýk
+        if (Panel == null) return;
+
+        bool isOpen = Panel.activeSelf;
+
+        if (isOpen && currentType == type)
+        {
+            ClosePanel();
+            return;
+        }
         // 1. Dýþarýdakileri Kapat (Manuel Kodla)
         if (ArenaUIScript != null) ArenaUIScript.ClosePanel();
         if (mainShopManager != null) mainShopManager.CloseAllPanels();
@@ -102,4 +112,8 @@ public class StaffInteractionUI : MonoBehaviour
     {
         Panel.SetActive(false);
     }
+
+    public void ToggleFaber() => ToggleStaff(StaffType.Faber);
+    public void ToggleMedicus() => ToggleStaff(StaffType.Medicus);
+    public void ToggleDoctore() => ToggleStaff(StaffType.Doctore);
 }

@@ -12,6 +12,7 @@ public class LudusManager : MonoBehaviour
     public Text FoodText;
     public Text WaterText;
     public Text DayText;
+    public Text WineText;
 
     [Header("References")]
     public Transform GardenArea;
@@ -47,6 +48,9 @@ public class LudusManager : MonoBehaviour
     // Campaign panelini de buraya ekleyeceðiz birazdan
     public GameObject CampaignPanel;
 
+    [Header("Ludus Visual Tuning")]
+    public float LudusGladiatorScale = 0.9f;
+
     IEnumerator Start()
     {
         yield return null;
@@ -64,10 +68,11 @@ public class LudusManager : MonoBehaviour
     public void UpdateUI()
     {
         if (GameManager.I == null) return;
-        GoldText.text = "Gold: " + GameManager.I.Resources.Gold;
-        FoodText.text = "Food: " + GameManager.I.Resources.Food;
-        WaterText.text = "Water: " + GameManager.I.Resources.Water;
-        DayText.text = "Day: " + GameManager.I.Day;
+        GoldText.text =  GameManager.I.Resources.Gold + " " ;
+        FoodText.text =  GameManager.I.Resources.Food + " ";
+        WaterText.text = GameManager.I.Resources.Water + " ";
+        WineText.text = GameManager.I.Resources.Wine + " ";
+        DayText.text = GameManager.I.Day + "Days";
 
         // --- YENÝ: LEVEL VE XP GÜNCELLEME ---
         LevelText.text = "Lvl " + GameManager.I.Resources.LudusLevel;
@@ -173,6 +178,9 @@ public class LudusManager : MonoBehaviour
                 if (prefabToUse != null)
                 {
                     var go = Instantiate(prefabToUse, GardenArea);
+                    // Ludus'a özel scale
+                    go.transform.localScale = Vector3.one * LudusGladiatorScale;
+
 
                     // A) VERÝYÝ BAÐLA
                     var view = go.GetComponent<GladiatorView>();
@@ -287,7 +295,7 @@ public class LudusManager : MonoBehaviour
 
         // 2. MEDICUS (Doktor) -> YERÝ: ÜST KAT (0.75)
         if (GameManager.I.Resources.HasMedicus)
-        {
+        { 
             Vector3 pos = Camera.main.ViewportToWorldPoint(new Vector3(xLoc, 0.75f, 10f));
             pos.z = 0;
             SpawnIndividualStaff(MedicusPrefab, pos);
@@ -318,11 +326,10 @@ public class LudusManager : MonoBehaviour
         activeStaff.Add(go);
     }
 
-    public void OpenCampaign()
+    public void ToggleCampaign()
     {
-        // Global UI Manager kullanýyorsan onu çaðýr, yoksa manuel aç
-        // Örn: FindObjectOfType<LudusShopManager>().CloseAllPanels();
-        CampaignPanel.SetActive(true);
+        bool isOpen = (CampaignPanel != null && CampaignPanel.activeSelf);
+        if (CampaignPanel != null) CampaignPanel.SetActive(!isOpen);
     }
 
     public void PlaceOrSwap(GladiatorView draggedView, int targetSlot, int originalSlot)

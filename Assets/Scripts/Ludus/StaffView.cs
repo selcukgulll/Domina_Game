@@ -3,7 +3,9 @@ using UnityEngine.EventSystems;
 
 public class StaffView : MonoBehaviour
 {
-    public StaffType Type; // Editörden seçeceðiz (Medicus mu Doctore mi?)
+    [Header("Which staff is this object?")]
+    public StaffType Type; // Inspector'dan Medicus / Doctore / Faber seç
+
     private StaffInteractionUI uiManager;
 
     void Start()
@@ -13,13 +15,14 @@ public class StaffView : MonoBehaviour
 
     void OnMouseDown()
     {
-        // 1. UI Korumasý (Ayný Gladyatördeki gibi)
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+        // UI üzerindeyken alttaki world týklamasýný yeme
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
 
-        // 2. Panel açýksa baþka staff'a týklayýnca bilgiler güncellensin
-        if (uiManager != null)
-        {
-            uiManager.OpenPanel(Type);
-        }
+        if (uiManager == null)
+            return;
+
+        // Týklanan staff tipine göre aç/kapat (toggle)
+        uiManager.ToggleStaff(Type);
     }
 }

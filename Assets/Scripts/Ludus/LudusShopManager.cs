@@ -24,6 +24,8 @@ public class LudusShopManager : MonoBehaviour
     public RecruitSlot[] RecruitSlots;
 
     private List<GladiatorData> dailyCandidates = new List<GladiatorData>();
+    private bool[] dailySold = new bool[3]; // 3 recruit slotu var
+
 
     // --- LUDUS MANAGER REFERANSI ---
     private LudusManager visualManager;
@@ -66,13 +68,7 @@ public class LudusShopManager : MonoBehaviour
     }
 
     // --- MARKET ---
-    public void OpenMarket()
-    {
-        CloseAllPanels();
-        MarketPanel.SetActive(true);
-        UpdateGoldUI();
-    }
-
+ 
     public void BuyFood() => BuyResource("Food", 50, 10);
     public void BuyWater() => BuyResource("Water", 50, 10);
     public void BuyWine() => BuyResource("Wine", 100, 5);
@@ -93,13 +89,6 @@ public class LudusShopManager : MonoBehaviour
     }
 
     // --- STAFF ---
-    public void OpenStaff()
-    {
-        CloseAllPanels();
-        StaffPanel.SetActive(true);
-        UpdateGoldUI();
-        RefreshStaffButtons();
-    }
 
     void RefreshStaffButtons()
     {
@@ -143,19 +132,6 @@ public class LudusShopManager : MonoBehaviour
     }
 
     // --- RECRUIT ---
-    public void OpenRecruit()
-    {
-        CloseAllPanels();
-        RecruitPanel.SetActive(true);
-        UpdateGoldUI();
-
-        if (dailyCandidates.Count == 0)
-        {
-            GenerateDailyCandidates();
-        }
-
-        RefreshRecruitUI();
-    }
 
     public void BuyRandomSlave()
     {
@@ -182,7 +158,12 @@ public class LudusShopManager : MonoBehaviour
 
     void GenerateDailyCandidates()
     {
+
         dailyCandidates.Clear();
+
+        for (int i = 0; i < dailySold.Length; i++)
+            dailySold[i] = false;
+
         for (int i = 0; i < 3; i++)
         {
             GladiatorData candidate = new GladiatorData(GameManager.I.GetNextGladiatorID());
@@ -207,27 +188,55 @@ public class LudusShopManager : MonoBehaviour
     {
         for (int i = 0; i < RecruitSlots.Length; i++)
         {
-            if (i < dailyCandidates.Count)
+            // Bu slot için aday var mý?
+            if (i >= dailyCandidates.Count)
             {
-                var candidate = dailyCandidates[i];
-                var slot = RecruitSlots[i];
-                int price = candidate.CalculateValue();
+                RecruitSlots[i].Container.SetActive(false);
+                continue;
+            }
 
-                slot.Container.SetActive(true);
+            var candidate = dailyCandidates[i];
+            var slot = RecruitSlots[i];
+            int price = candidate.CalculateValue();
+
+            slot.Container.SetActive(true);
+
+            // SOLD mý?
+            bool isSold = (i < dailySold.Length) && dailySold[i];
+
+            // Buton listener temizle
+            slot.BuyButton.onClick.RemoveAllListeners();
+
+            if (isSold)
+            {
+                // --- SOLD GÖRÜNÜMÜ ---
+                slot.NameText.text = "<b>SOLD</b>";
+                slot.StatsText.text = "";
+                slot.PriceText.text = "";
+
+                slot.BuyButton.interactable = false;
+
+                var btnText = slot.BuyButton.GetComponentInChildren<Text>();
+                if (btnText != null) btnText.text = "SOLD";
+            }
+            else
+            {
+                // --- NORMAL GÖRÜNÜM ---
                 slot.NameText.text = candidate.Name + " (" + candidate.Class + ")";
                 slot.StatsText.text = $"STR: {candidate.Strength:F0} | AGI: {candidate.Agility:F0} | HP: {candidate.MaxHP}";
                 slot.PriceText.text = price + " Gold";
 
-                slot.BuyButton.onClick.RemoveAllListeners();
-                int index = i;
+                slot.BuyButton.interactable = true;
+
+                var btnText = slot.BuyButton.GetComponentInChildren<Text>();
+                if (btnText != null) btnText.text = "BUY";
+
+                int index = i; // closure fix
                 slot.BuyButton.onClick.AddListener(() => BuyCandidate(index));
-            }
-            else
-            {
-                RecruitSlots[i].Container.SetActive(false);
             }
         }
     }
+
 
     public void BuyCandidate(int index)
     {
@@ -250,7 +259,9 @@ public class LudusShopManager : MonoBehaviour
         {
             GameManager.I.Resources.Gold -= price;
             GameManager.I.Gladiators.Add(candidate);
-            dailyCandidates.RemoveAt(index);
+
+            if (index < dailySold.Length)
+                dailySold[index] = true;
 
             UpdateGoldUI();
             RefreshRecruitUI();
@@ -261,5 +272,47 @@ public class LudusShopManager : MonoBehaviour
                 visualManager.SpawnGladiators();
             }
         }
+
     }
+
+    public void ToggleMarket()
+    {
+        bool willOpen = MarketPanel != null && !MarketPanel.activeSelf;
+        CloseAllPanels();
+        if (MarketPanel != null) MarketPanel.SetActive(willOpen);
+
+        if (willOpen) UpdateGoldUI();
+    }
+
+    public void ToggleStaff()
+    {
+        bool willOpen = StaffPanel != null && !StaffPanel.activeSelf;
+        CloseAllPanels();
+        if (StaffPanel != null) StaffPanel.SetActive(willOpen);
+
+        if (willOpen)
+        {
+            UpdateGoldUI();
+            RefreshStaffButtons();
+        }
+    }
+
+    public void ToggleRecruit()
+    {
+        bool willOpen = RecruitPanel != null && !RecruitPanel.activeSelf;
+        CloseAllPanels();
+        if (RecruitPanel != null) RecruitPanel.SetActive(willOpen);
+
+        if (willOpen)
+        {
+            UpdateGoldUI();
+
+            if (dailyCandidates.Count == 0)
+                GenerateDailyCandidates();
+
+            RefreshRecruitUI();
+        }
+    }
+
+
 }
