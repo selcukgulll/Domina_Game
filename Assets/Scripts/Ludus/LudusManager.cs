@@ -16,6 +16,8 @@ public class LudusManager : MonoBehaviour
 
     [Header("References")]
     public Transform GardenArea;
+    public Transform StaffArea;
+
     [Header("Prefabs")]
     // Artýk tek bir tane deðil, liste olacak
     public GameObject[] GladiatorPrefabs;
@@ -31,12 +33,15 @@ public class LudusManager : MonoBehaviour
     private List<Vector3> slotPositions = new List<Vector3>();
 
     [Header("Staff Settings")]
-    // YENÝ SÝSTEM: 3 AYRI PREFAB
     public GameObject MedicusPrefab;
     public GameObject DoctorePrefab;
     public GameObject FaberPrefab;
 
-    public Transform StaffSpawnPoint;
+    [Header("Staff Spawn Points")]
+    public Transform MedicusSpawnPoint;
+    public Transform DoctoreSpawnPoint;
+    public Transform FaberSpawnPoint;
+
 
     private List<GameObject> activeStaff = new List<GameObject>();
 
@@ -280,51 +285,57 @@ public class LudusManager : MonoBehaviour
 
     public void SpawnStaffs()
     {
-        // 1. Temizlik
+        if (GameManager.I == null) return;
+
+        // 1) Temizlik
         foreach (var s in activeStaff)
         {
             if (s != null) Destroy(s);
         }
         activeStaff.Clear();
 
-        // --- SABÝT POZÝSYON AYARLARI ---
-        // X = 0.1f (Ekranýn solu)
-        // Y deðerlerini her biri için özel veriyoruz (0.0 en alt, 1.0 en üst)
-
-        float xLoc = 0.1f;
-
-        // 2. MEDICUS (Doktor) -> YERÝ: ÜST KAT (0.75)
-        if (GameManager.I.Resources.HasMedicus)
-        { 
-            Vector3 pos = Camera.main.ViewportToWorldPoint(new Vector3(xLoc, 0.75f, 10f));
-            pos.z = 0;
-            SpawnIndividualStaff(MedicusPrefab, pos);
+        // 2) Medicus
+        if (GameManager.I.Resources.HasMedicus && MedicusPrefab != null && MedicusSpawnPoint != null)
+        {
+            Vector3 p = MedicusSpawnPoint.position;
+            p.z = 0f;
+            SpawnIndividualStaff(MedicusPrefab, p);
         }
 
-        // 3. DOCTORE (Eðitmen) -> YERÝ: ORTA KAT (0.50)
-        if (GameManager.I.Resources.HasDoctore)
+        // 3) Doctore
+        if (GameManager.I.Resources.HasDoctore && DoctorePrefab != null && DoctoreSpawnPoint != null)
         {
-            Vector3 pos = Camera.main.ViewportToWorldPoint(new Vector3(xLoc, 0.50f, 10f));
-            pos.z = 0;
-            SpawnIndividualStaff(DoctorePrefab, pos);
+            Vector3 p = DoctoreSpawnPoint.position;
+            p.z = 0f;
+            SpawnIndividualStaff(DoctorePrefab, p);
         }
 
-        // 4. FABER (Demirci) -> YERÝ: ALT KAT (0.25)
-        if (GameManager.I.Resources.HasFaber)
+        // 4) Faber
+        if (GameManager.I.Resources.HasFaber && FaberPrefab != null && FaberSpawnPoint != null)
         {
-            Vector3 pos = Camera.main.ViewportToWorldPoint(new Vector3(xLoc, 0.25f, 10f));
-            pos.z = 0;
-            SpawnIndividualStaff(FaberPrefab, pos);
+            Vector3 p = FaberSpawnPoint.position;
+            p.z = 0f;
+            SpawnIndividualStaff(FaberPrefab, p);
         }
     }
 
-    // Yeni sistemin yardýmcýsý: Sadece prefabý koyar
+
     void SpawnIndividualStaff(GameObject prefab, Vector3 pos)
     {
-        GameObject go = Instantiate(prefab, transform);
-        go.transform.position = pos;
+        if (prefab == null) return;
+
+        Transform parent = (StaffArea != null ? StaffArea : null);
+        pos.z = 0f;
+
+        GameObject go = Instantiate(prefab, pos, Quaternion.identity);
+
+        if (parent != null)
+            go.transform.SetParent(parent, true);
+
         activeStaff.Add(go);
     }
+
+
 
     public void ToggleCampaign()
     {
